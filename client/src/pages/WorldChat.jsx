@@ -11,9 +11,13 @@ function WorldChat({ user }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
   const [sending, setSending] = useState(false)
   const [reportingId, setReportingId] = useState(null)
   const bottomRef = useRef(null)
+  const topRef = useRef(null)
+  const scrollRef = useRef(null)
 
   useEffect(() => {
     socket = io(SOCKET_URL)
@@ -25,6 +29,7 @@ function WorldChat({ user }) {
         if (alreadyExists) return prev
         return [...prev, msg]
       })
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     })
 
     const token = localStorage.getItem('token')
@@ -32,32 +37,67 @@ function WorldChat({ user }) {
       headers: { Authorization: 'Bearer ' + token }
     }).then(res => {
       setMessages(res.data)
+      setHasMore(res.data.length === 50)
       setLoading(false)
+      setTimeout(() => bottomRef.current?.scrollIntoView(), 50)
     }).catch(() => setLoading(false))
 
     return () => { socket.disconnect() }
   }, [])
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  const loadMore = async () => {
+    if (loadingMore || !hasMore || messages.length === 0) return
+    setLoadingMore(true)
+
+    const oldest = messages[0].created_at
+    const token = localStorage.getItem('token')
+
+    try {
+      const res = await axios.get(API + '/world/messages?before=' + encodeURIComponent(oldest), {
+        headers: { Authorization: 'Bearer ' + token }
+      })
+
+      if (res.data.length === 0) {
+        setHasMore(false)
+      } else {
+        // Save scroll position before prepending
+        const container = scrollRef.current
+        const prevScrollHeight = container.scrollHeight
+
+        setMessages(prev => [...res.data, ...prev])
+        setHasMore(res.data.length === 50)
+
+        // Restore scroll position so it doesn't jump to top
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight - prevScrollHeight
+        })
+      }
+    } catch (err) {
+      console.error('Load more error:', err)
+    }
+    setLoadingMore(false)
+  }
+
+  const handleScroll = () => {
+    const container = scrollRef.current
+    if (container.scrollTop === 0) {
+      loadMore()
+    }
+  }
 
   const sendMessage = async () => {
-    console.log('sendMessage called, input:', input)
     if (!input.trim() || sending) return
-    console.log('passing guard, sending request...')
     setSending(true)
     try {
       const token = localStorage.getItem('token')
-      console.log('about to POST with token:', token?.slice(0, 20))
       const res = await axios.post(API + '/world/messages',
         { message: input.trim() },
         { headers: { Authorization: 'Bearer ' + token } }
       )
-      console.log('POST success:', res.data)
       setMessages(prev => [...prev, res.data])
       socket.emit('world_message', res.data)
       setInput('')
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     } catch (err) {
       console.error('Send error:', err)
       alert('Failed to send message. Please check your connection and try again.')
@@ -105,7 +145,13 @@ function WorldChat({ user }) {
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+      >
+        {loadingMore && <div style={{ color: '#555', textAlign: 'center', padding: '0.5rem' }}>Loading older messages...</div>}
+        {!hasMore && <div style={{ color: '#555', textAlign: 'center', padding: '0.5rem', fontSize: '0.75rem' }}>No more messages</div>}
         {loading && <div style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>Loading messages...</div>}
         {!loading && messages.length === 0 && (
           <div style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>No messages yet. Be the first to say something!</div>
