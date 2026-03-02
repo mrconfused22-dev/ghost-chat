@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-const API = 'http://localhost:3001/api'
+const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 
 function AdminPanel({ user, onClose }) {
   const [tab, setTab] = useState('overview')
