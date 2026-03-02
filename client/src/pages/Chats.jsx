@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import PrivateChat from './PrivateChat'
 
-const API = 'http://localhost:3001/api'
+const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 
 function Chats({ user, newMessageFrom = {}, onOpenChat }) {
   const [friends, setFriends] = useState([])
