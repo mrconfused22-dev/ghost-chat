@@ -107,8 +107,8 @@ io.on("connection", (socket) => {
   });
   socket.on("join_world", () => socket.join("world"));
   socket.on("world_message", (data) => {
-    if (data && data.message && typeof data.message === "string") {
-      io.to("world").emit("world_message", data);
+  if (data && data.message && typeof data.message === "string") {
+    socket.broadcast.to("world").emit("world_message", data);
     }
   });
   socket.on("join_group", (groupId) => {
