@@ -117,7 +117,7 @@ function Dashboard({ user, onLogout }) {
         {!showSettings && tab === 'chats' && <Chats user={user} onUnreadChange={setChatsUnread} />}
         {!showSettings && tab === 'friends' && <Friends user={user} />}
         {!showSettings && tab === 'groups' && <Groups user={user} onUnreadChange={setGroupsUnread} />}
-        {!showSettings && tab === 'admin' && user.isAdmin && <AdminPanel user={user} onClose={() => setTab('world')} />
+        {!showSettings && tab === 'admin' && user.isAdmin && <AdminPanel user={user} onClose={() => setTab('world')} />}
       </div>
     </div>
   )
