@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 
-const API = 'http://localhost:3001/api'
+const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 
 function SetDisplayName({ onDone }) {
   const [name, setName] = useState('')

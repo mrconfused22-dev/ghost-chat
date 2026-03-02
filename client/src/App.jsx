@@ -7,7 +7,7 @@ import SetDisplayName from './pages/SetDisplayName'
 import Dashboard from './pages/Dashboard'
 import { generateKeypair, saveKeypair, getKeypair } from './crypto'
 
-const API = 'http://localhost:3001/api'
+const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 
 function App() {
   const [screen, setScreen] = useState(() => {

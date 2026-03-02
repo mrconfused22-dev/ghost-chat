@@ -3,7 +3,7 @@ import axios from 'axios'
 import { io } from 'socket.io-client'
 import GroupChat from './GroupChat'
 
-const API = 'http://localhost:3001/api'
+const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 const SOCKET_URL = 'http://localhost:3001'
 
 function Groups({ user, onUnreadChange }) {
