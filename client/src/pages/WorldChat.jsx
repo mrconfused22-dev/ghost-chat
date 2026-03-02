@@ -45,7 +45,14 @@ function WorldChat({ user }) {
   }, [messages])
 
   const sendMessage = async () => {
-    if (!input.trim() || sending) return
+  console.log('sendMessage called, input:', input)
+  if (!input.trim() || sending) return
+  console.log('passing guard, sending request...')
+  setSending(true)
+  try {
+    const token = localStorage.getItem('token')
+    console.log('about to POST with token:', token?.slice(0, 20))
+    const res = await axios.post(API + '/world/messages',
     setSending(true)
     try {
       const token = localStorage.getItem('token')
