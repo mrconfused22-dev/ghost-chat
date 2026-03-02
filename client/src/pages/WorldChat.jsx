@@ -66,7 +66,9 @@ function WorldChat({ user }) {
       socket.emit('world_message', res.data)
       setInput('')
     } catch (err) {
-      console.error('Send error:', err)
+    console.error('Send error:', err)
+    alert('Failed to send message. Please check your connection and try again.')
+    setInput(input) // restore the message they tried to send
     }
     setSending(false)
   }
