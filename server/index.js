@@ -15,7 +15,6 @@ const adminRoutes = require("./routes/admin");
 
 const app = express();
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -23,34 +22,49 @@ const io = new Server(server, {
   }
 });
 
-// Security headers
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
-app.use(express.json({ limit: "10kb" })); // Limit request body size
+app.use(express.json({ limit: "10kb" }));
 
-// Rate limiters
+// Global limiter
 const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 300,
   message: { error: "Too many requests, please slow down" },
   standardHeaders: true,
   legacyHeaders: false
 });
 
-const authLimiter = rateLimit({
+// 5 login attempts per 15 minutes per IP
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: { error: "Too many login attempts, please try again later" }
+  max: 5,
+  message: { error: "Too many login attempts. Try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// 3 account creations per 24 hours per IP
+const registerLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 3,
+  message: { error: "Too many accounts created from this device. Try again tomorrow." },
+  standardHeaders: true,
+  legacyHeaders: false
 });
 
 const messageLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 30,
   message: { error: "You are sending messages too fast" }
 });
 
 app.use(globalLimiter);
-app.use("/api/auth", authLimiter, authRoutes);
+
+// Strict per-endpoint auth limiting
+app.use("/api/auth/login", loginLimiter);
+app.use("/api/auth/register", registerLimiter);
+app.use("/api/auth", authRoutes);
 app.use("/api/world", messageLimiter, worldRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/messages", messageLimiter, messageRoutes);
@@ -61,33 +75,24 @@ app.get("/", (req, res) => {
   res.json({ message: "Ghost Chat server is alive" });
 });
 
-// Cleanup job — runs every hour
-// Deletes expired world messages and group messages
 async function runCleanup() {
   try {
-    const worldResult = await db.query(
-      "DELETE FROM world_messages WHERE expires_at < NOW() RETURNING id"
-    );
-    const groupResult = await db.query(
-      "DELETE FROM group_messages WHERE expires_at < NOW() RETURNING id"
-    );
+    const worldResult = await db.query("DELETE FROM world_messages WHERE expires_at < NOW() RETURNING id");
+    const groupResult = await db.query("DELETE FROM group_messages WHERE expires_at < NOW() RETURNING id");
     const worldCount = worldResult.rowCount || 0;
     const groupCount = groupResult.rowCount || 0;
     if (worldCount > 0 || groupCount > 0) {
-      console.log(`Cleanup: deleted ${worldCount} world messages, ${groupCount} group messages`);
+      console.log("Cleanup: deleted " + worldCount + " world messages, " + groupCount + " group messages");
     }
   } catch (err) {
     console.error("Cleanup error:", err.message);
   }
 }
 
-// Run cleanup on startup and then every hour
 runCleanup();
 setInterval(runCleanup, 60 * 60 * 1000);
 
-// Socket.io
 const onlineUsers = {};
-
 io.on("connection", (socket) => {
   socket.on("register", (accountCode) => {
     if (typeof accountCode === "string" && accountCode.length < 50) {
@@ -95,34 +100,28 @@ io.on("connection", (socket) => {
       socket.accountCode = accountCode;
     }
   });
-
   socket.on("join_world", () => socket.join("world"));
-
   socket.on("world_message", (data) => {
     if (data && data.message && typeof data.message === "string") {
       io.to("world").emit("world_message", data);
     }
   });
-
   socket.on("join_group", (groupId) => {
-    if (typeof groupId === "string") socket.join(`group:${groupId}`);
+    if (typeof groupId === "string") socket.join("group:" + groupId);
   });
-
   socket.on("group_message", (data) => {
-    if (data && data.groupId) io.to(`group:${data.groupId}`).emit("group_message", data);
+    if (data && data.groupId) io.to("group:" + data.groupId).emit("group_message", data);
   });
-
   socket.on("private_message", (data) => {
     if (data && data.to) {
       const receiverSocketId = onlineUsers[data.to];
       if (receiverSocketId) io.to(receiverSocketId).emit("private_message", data);
     }
   });
-
   socket.on("disconnect", () => {
     if (socket.accountCode) delete onlineUsers[socket.accountCode];
   });
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log("Server running on port " + PORT));

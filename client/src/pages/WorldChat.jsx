@@ -85,7 +85,7 @@ function WorldChat({ user }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0a0a0a' }}>
       <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#111' }}>
-        <span style={{ fontSize: '1.5rem' }}>🌍</span>
+        <span style={{ fontSize: '1.5rem' }}>🪐</span>
         <div>
           <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>World Chat</div>
           <div style={{ color: '#555', fontSize: '0.75rem' }}>Messages disappear after 7 days</div>
