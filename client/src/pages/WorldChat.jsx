@@ -18,9 +18,17 @@ function WorldChat({ user }) {
   useEffect(() => {
     socket = io(SOCKET_URL)
     socket.emit('join_world')
+
     socket.on('world_message', (msg) => {
-      setMessages(prev => [...prev, msg])
+      // Only add message from socket if it's NOT from me
+      // (my own messages are added directly after API response)
+      setMessages(prev => {
+        const alreadyExists = prev.some(m => m.id === msg.id)
+        if (alreadyExists) return prev
+        return [...prev, msg]
+      })
     })
+
     const token = localStorage.getItem('token')
     axios.get(API + '/world/messages', {
       headers: { Authorization: 'Bearer ' + token }
@@ -28,6 +36,7 @@ function WorldChat({ user }) {
       setMessages(res.data)
       setLoading(false)
     }).catch(() => setLoading(false))
+
     return () => { socket.disconnect() }
   }, [])
 
@@ -44,6 +53,9 @@ function WorldChat({ user }) {
         { message: input.trim() },
         { headers: { Authorization: 'Bearer ' + token } }
       )
+      // Add my own message directly from API response
+      setMessages(prev => [...prev, res.data])
+      // Broadcast to others via socket
       socket.emit('world_message', res.data)
       setInput('')
     } catch (err) {
@@ -91,16 +103,25 @@ function WorldChat({ user }) {
           <div style={{ color: '#555', fontSize: '0.75rem' }}>Messages disappear after 7 days</div>
         </div>
       </div>
+
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         {loading && <div style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>Loading messages...</div>}
-        {!loading && messages.length === 0 && <div style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>No messages yet. Be the first to say something!</div>}
+        {!loading && messages.length === 0 && (
+          <div style={{ color: '#555', textAlign: 'center', marginTop: '2rem' }}>No messages yet. Be the first to say something!</div>
+        )}
         {messages.map((msg) => {
           const isMe = msg.account_code === user.accountCode
           return (
             <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
               {!isMe && <span style={{ color: '#888', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{msg.display_name}</span>}
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.4rem', flexDirection: isMe ? 'row-reverse' : 'row' }}>
-                <div style={{ background: isMe ? '#ffffff' : '#1a1a1a', color: isMe ? '#000' : '#fff', padding: '0.6rem 1rem', borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px', maxWidth: '75%', fontSize: '0.95rem', lineHeight: '1.4', wordBreak: 'break-word' }}>
+                <div style={{
+                  background: isMe ? '#ffffff' : '#1a1a1a',
+                  color: isMe ? '#000' : '#fff',
+                  padding: '0.6rem 1rem',
+                  borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                  maxWidth: '75%', fontSize: '0.95rem', lineHeight: '1.4', wordBreak: 'break-word'
+                }}>
                   {msg.message}
                 </div>
                 {!isMe && (
@@ -120,9 +141,22 @@ function WorldChat({ user }) {
         })}
         <div ref={bottomRef} />
       </div>
+
       <div style={{ padding: '1rem', borderTop: '1px solid #222', display: 'flex', gap: '0.75rem', background: '#111' }}>
-        <input type="text" placeholder="Message the world..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyDown} maxLength={500} style={{ flex: 1, padding: '0.75rem 1rem', background: '#1a1a1a', border: '1px solid #333', borderRadius: '24px', color: '#fff', fontSize: '0.95rem', outline: 'none' }} />
-        <button onClick={sendMessage} disabled={sending || !input.trim()} style={{ background: input.trim() ? '#ffffff' : '#222', color: input.trim() ? '#000' : '#555', border: 'none', borderRadius: '50%', width: '44px', height: '44px', cursor: input.trim() ? 'pointer' : 'not-allowed', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <input
+          type="text"
+          placeholder="Message the world..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          maxLength={500}
+          style={{ flex: 1, padding: '0.75rem 1rem', background: '#1a1a1a', border: '1px solid #333', borderRadius: '24px', color: '#fff', fontSize: '0.95rem', outline: 'none' }}
+        />
+        <button
+          onClick={sendMessage}
+          disabled={sending || !input.trim()}
+          style={{ background: input.trim() ? '#ffffff' : '#222', color: input.trim() ? '#000' : '#555', border: 'none', borderRadius: '50%', width: '44px', height: '44px', cursor: input.trim() ? 'pointer' : 'not-allowed', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+        >
           &#10148;
         </button>
       </div>
