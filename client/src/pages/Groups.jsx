@@ -4,7 +4,7 @@ import { io } from 'socket.io-client'
 import GroupChat from './GroupChat'
 
 const API = 'https://ghost-chat-server-muzw.onrender.com/api'
-const SOCKET_URL = 'http://localhost:3001'
+const SOCKET_URL = 'https://ghost-chat-server-muzw.onrender.com'
 
 function Groups({ user, onUnreadChange }) {
   const [groups, setGroups] = useState([])

@@ -3,7 +3,7 @@ import axios from 'axios'
 import { io } from 'socket.io-client'
 
 const API = 'https://ghost-chat-server-muzw.onrender.com/api'
-const SOCKET_URL = 'http://localhost:3001'
+const SOCKET_URL = 'https://ghost-chat-server-muzw.onrender.com'
 
 let socket
 
