@@ -20,8 +20,6 @@ function WorldChat({ user }) {
     socket.emit('join_world')
 
     socket.on('world_message', (msg) => {
-      // Only add message from socket if it's NOT from me
-      // (my own messages are added directly after API response)
       setMessages(prev => {
         const alreadyExists = prev.some(m => m.id === msg.id)
         if (alreadyExists) return prev
@@ -45,30 +43,24 @@ function WorldChat({ user }) {
   }, [messages])
 
   const sendMessage = async () => {
-  console.log('sendMessage called, input:', input)
-  if (!input.trim() || sending) return
-  console.log('passing guard, sending request...')
-  setSending(true)
-  try {
-    const token = localStorage.getItem('token')
-    console.log('about to POST with token:', token?.slice(0, 20))
-    const res = await axios.post(API + '/world/messages',
+    console.log('sendMessage called, input:', input)
+    if (!input.trim() || sending) return
+    console.log('passing guard, sending request...')
     setSending(true)
     try {
       const token = localStorage.getItem('token')
+      console.log('about to POST with token:', token?.slice(0, 20))
       const res = await axios.post(API + '/world/messages',
         { message: input.trim() },
         { headers: { Authorization: 'Bearer ' + token } }
       )
-      // Add my own message directly from API response
+      console.log('POST success:', res.data)
       setMessages(prev => [...prev, res.data])
-      // Broadcast to others via socket
       socket.emit('world_message', res.data)
       setInput('')
     } catch (err) {
-    console.error('Send error:', err)
-    alert('Failed to send message. Please check your connection and try again.')
-    setInput(input) // restore the message they tried to send
+      console.error('Send error:', err)
+      alert('Failed to send message. Please check your connection and try again.')
     }
     setSending(false)
   }
