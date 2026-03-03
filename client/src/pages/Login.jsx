@@ -51,21 +51,76 @@ function Login({ onLogin }) {
     setLoading(false)
   }
 
-  const inputStyle = { width: '100%', padding: '0.9rem 1rem', background: 'transparent', border: '1px solid #333', borderRadius: '4px', color: '#fff', fontSize: '0.9rem', letterSpacing: '0.05em', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }
-  const btnPrimary = { width: '100%', background: '#fff', color: '#000', border: '2px solid #fff', padding: '1rem', fontSize: '0.85rem', fontWeight: 900, letterSpacing: '0.2em', textTransform: 'uppercase', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.2s', marginTop: '0.5rem' }
-  const btnOutline = { width: '100%', background: 'transparent', color: '#fff', border: '1px solid #333', padding: '1rem', fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.2s' }
+  const inputStyle = {
+    width: '100%',
+    padding: '0.9rem 1rem',
+    background: 'transparent',
+    border: '1px solid #333',
+    borderRadius: '4px',
+    color: '#fff',
+    fontSize: 'clamp(0.85rem, 2.5vw, 0.9rem)',
+    letterSpacing: '0.05em',
+    outline: 'none',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s',
+  }
+
+  const btnPrimary = {
+    width: '100%',
+    background: '#fff',
+    color: '#000',
+    border: '2px solid #fff',
+    padding: '1rem',
+    fontSize: 'clamp(0.78rem, 2.2vw, 0.85rem)',
+    fontWeight: 900,
+    letterSpacing: '0.2em',
+    textTransform: 'uppercase',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    marginTop: '0.5rem',
+  }
+
+  const btnOutline = {
+    width: '100%',
+    background: 'transparent',
+    color: '#fff',
+    border: '1px solid #333',
+    padding: '1rem',
+    fontSize: 'clamp(0.78rem, 2.2vw, 0.85rem)',
+    fontWeight: 700,
+    letterSpacing: '0.15em',
+    textTransform: 'uppercase',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+    <div style={{
+      minHeight: '100vh',
+      minHeight: '100dvh',
+      background: '#000',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 'clamp(1rem, 5vw, 2rem)',
+      position: 'relative',
+      overflow: 'hidden',
+      width: '100%',
+    }}>
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '60px 60px', pointerEvents: 'none' }} />
       <div style={{ position: 'absolute', top: '10%', left: '15%', color: '#fff', fontSize: '2rem', opacity: 0.8, textShadow: '0 0 20px #fff' }}>&#10022;</div>
       <div style={{ position: 'absolute', top: '18%', right: '18%', color: '#fff', fontSize: '0.8rem', opacity: 0.3 }}>&#10022;</div>
 
       <div style={{ maxWidth: '420px', width: '100%', position: 'relative', zIndex: 1 }}>
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div style={{ fontSize: '3rem', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))', marginBottom: '0.75rem' }}><img src="/ghost.png" style={{width:"100%",height:"100%",objectFit:"contain"}} /></div>
-          <div style={{ fontSize: '3rem', fontWeight: 900, color: '#fff', fontFamily: 'Arial Black, Impact, sans-serif', letterSpacing: '0.06em', lineHeight: 1 }}>GHOST</div>
-          <div style={{ fontSize: '3rem', fontWeight: 900, color: 'transparent', WebkitTextStroke: '2px #fff', fontFamily: 'Arial Black, Impact, sans-serif', letterSpacing: '0.06em', lineHeight: 1, marginBottom: '0.25rem' }}>CHAT</div>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ width: 'clamp(50px, 12vw, 80px)', height: 'clamp(50px, 12vw, 80px)', margin: '0 auto 0.75rem', filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))' }}>
+            <img src="/ghost.png" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
+          <div style={{ fontSize: 'clamp(1.8rem, 8vw, 3rem)', fontWeight: 900, color: '#fff', fontFamily: 'Arial Black, Impact, sans-serif', letterSpacing: '0.06em', lineHeight: 1 }}>GHOST</div>
+          <div style={{ fontSize: 'clamp(1.8rem, 8vw, 3rem)', fontWeight: 900, color: 'transparent', WebkitTextStroke: '2px #fff', fontFamily: 'Arial Black, Impact, sans-serif', letterSpacing: '0.06em', lineHeight: 1, marginBottom: '0.25rem' }}>CHAT</div>
         </div>
 
         {error && <div style={{ background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444', borderRadius: '4px', padding: '0.75rem', marginBottom: '1rem', color: '#ff4444', fontSize: '0.85rem', textAlign: 'center' }}>{error}</div>}
@@ -77,8 +132,8 @@ function Login({ onLogin }) {
               onMouseLeave={e => { e.target.style.background = '#fff'; e.target.style.color = '#000' }}
             >Create New Account</button>
             <button onClick={() => setMode('login')} style={btnOutline}
-              onMouseEnter={e => { e.target.style.borderColor = '#fff'; e.target.style.color = '#fff' }}
-              onMouseLeave={e => { e.target.style.borderColor = '#333'; e.target.style.color = '#fff' }}
+              onMouseEnter={e => { e.target.style.borderColor = '#fff' }}
+              onMouseLeave={e => { e.target.style.borderColor = '#333' }}
             >I Already Have An Account</button>
           </div>
         )}
@@ -100,14 +155,14 @@ function Login({ onLogin }) {
         {mode === 'created' && newAccount && (
           <div>
             <p style={{ color: '#888', fontSize: '0.8rem', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.75rem', textAlign: 'center' }}>Your Account Code</p>
-            <div style={{ background: 'transparent', border: '1px solid #fff', borderRadius: '4px', padding: '1.25rem', fontSize: '1.4rem', letterSpacing: '0.2em', textAlign: 'center', fontFamily: 'monospace', color: '#fff', marginBottom: '0.5rem', fontWeight: 700 }}>
+            <div style={{ background: 'transparent', border: '1px solid #fff', borderRadius: '4px', padding: '1.25rem', fontSize: 'clamp(1rem, 4vw, 1.4rem)', letterSpacing: '0.15em', textAlign: 'center', fontFamily: 'monospace', color: '#fff', marginBottom: '0.5rem', fontWeight: 700, wordBreak: 'break-all' }}>
               {newAccount.accountCode}
             </div>
             <p style={{ color: '#ff4444', fontSize: '0.78rem', letterSpacing: '0.05em', marginBottom: '1.5rem', textAlign: 'center' }}>
               &#9888; Save this code now. You cannot recover it later.
             </p>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', cursor: 'pointer', color: '#888', fontSize: '0.82rem' }}>
-              <input type='checkbox' checked={saved} onChange={e => setSaved(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#fff' }} />
+              <input type='checkbox' checked={saved} onChange={e => setSaved(e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#fff', flexShrink: 0 }} />
               I have saved my account code safely
             </label>
             <button onClick={() => {
@@ -135,7 +190,8 @@ function Login({ onLogin }) {
           </div>
         )}
       </div>
-      <div style={{ position: 'absolute', bottom: '2rem', color: '#333', fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Ghost Chat · Private By Design</div>
+
+      <div style={{ position: 'absolute', bottom: '1.25rem', color: '#333', fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Ghost Chat · Private By Design</div>
     </div>
   )
 }
