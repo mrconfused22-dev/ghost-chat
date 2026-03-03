@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { io } from 'socket.io-client'
+import { useNotifications } from '../hooks/useNotifications'
 
 const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 const SOCKET_URL = 'https://ghost-chat-server-muzw.onrender.com'
@@ -16,8 +17,9 @@ function WorldChat({ user }) {
   const [sending, setSending] = useState(false)
   const [reportingId, setReportingId] = useState(null)
   const bottomRef = useRef(null)
-  const topRef = useRef(null)
   const scrollRef = useRef(null)
+
+  const { notify } = useNotifications()
 
   useEffect(() => {
     socket = io(SOCKET_URL)
@@ -30,6 +32,11 @@ function WorldChat({ user }) {
         return [...prev, msg]
       })
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+
+      // Notify if message is from someone else
+      if (msg.account_code !== user.accountCode) {
+        notify('worldChat', 'World Chat 🪐', `${msg.display_name}: ${msg.message}`)
+      }
     })
 
     const token = localStorage.getItem('token')
@@ -48,26 +55,19 @@ function WorldChat({ user }) {
   const loadMore = async () => {
     if (loadingMore || !hasMore || messages.length === 0) return
     setLoadingMore(true)
-
     const oldest = messages[0].created_at
     const token = localStorage.getItem('token')
-
     try {
       const res = await axios.get(API + '/world/messages?before=' + encodeURIComponent(oldest), {
         headers: { Authorization: 'Bearer ' + token }
       })
-
       if (res.data.length === 0) {
         setHasMore(false)
       } else {
-        // Save scroll position before prepending
         const container = scrollRef.current
         const prevScrollHeight = container.scrollHeight
-
         setMessages(prev => [...res.data, ...prev])
         setHasMore(res.data.length === 50)
-
-        // Restore scroll position so it doesn't jump to top
         requestAnimationFrame(() => {
           container.scrollTop = container.scrollHeight - prevScrollHeight
         })
@@ -80,9 +80,7 @@ function WorldChat({ user }) {
 
   const handleScroll = () => {
     const container = scrollRef.current
-    if (container.scrollTop === 0) {
-      loadMore()
-    }
+    if (container.scrollTop === 0) loadMore()
   }
 
   const sendMessage = async () => {
@@ -124,10 +122,7 @@ function WorldChat({ user }) {
   }
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
   }
 
   const formatTime = (ts) => {
@@ -136,8 +131,8 @@ function WorldChat({ user }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0a0a0a' }}>
-      <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#111' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#0a0a0a' }}>
+      <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #222', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#111', flexShrink: 0 }}>
         <span style={{ fontSize: '1.5rem' }}>🪐</span>
         <div>
           <div style={{ fontWeight: 'bold', fontSize: '1rem' }}>World Chat</div>
@@ -172,12 +167,8 @@ function WorldChat({ user }) {
                   {msg.message}
                 </div>
                 {!isMe && (
-                  <button
-                    onClick={() => handleReport(msg)}
-                    disabled={reportingId === msg.id}
-                    title="Report this user"
-                    style={{ background: 'transparent', border: 'none', color: '#444', fontSize: '0.85rem', cursor: 'pointer', padding: '4px', lineHeight: 1, flexShrink: 0 }}
-                  >
+                  <button onClick={() => handleReport(msg)} disabled={reportingId === msg.id} title="Report this user"
+                    style={{ background: 'transparent', border: 'none', color: '#444', fontSize: '0.85rem', cursor: 'pointer', padding: '4px', lineHeight: 1, flexShrink: 0 }}>
                     &#9873;
                   </button>
                 )}
@@ -189,7 +180,7 @@ function WorldChat({ user }) {
         <div ref={bottomRef} />
       </div>
 
-      <div style={{ padding: '1rem', borderTop: '1px solid #222', display: 'flex', gap: '0.75rem', background: '#111' }}>
+      <div style={{ padding: '1rem', borderTop: '1px solid #222', display: 'flex', gap: '0.75rem', background: '#111', flexShrink: 0 }}>
         <input
           type="text"
           placeholder="Message the world..."
@@ -199,11 +190,8 @@ function WorldChat({ user }) {
           maxLength={500}
           style={{ flex: 1, padding: '0.75rem 1rem', background: '#1a1a1a', border: '1px solid #333', borderRadius: '24px', color: '#fff', fontSize: '0.95rem', outline: 'none' }}
         />
-        <button
-          onClick={sendMessage}
-          disabled={sending || !input.trim()}
-          style={{ background: input.trim() ? '#ffffff' : '#222', color: input.trim() ? '#000' : '#555', border: 'none', borderRadius: '50%', width: '44px', height: '44px', cursor: input.trim() ? 'pointer' : 'not-allowed', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-        >
+        <button onClick={sendMessage} disabled={sending || !input.trim()}
+          style={{ background: input.trim() ? '#ffffff' : '#222', color: input.trim() ? '#000' : '#555', border: 'none', borderRadius: '50%', width: '44px', height: '44px', cursor: input.trim() ? 'pointer' : 'not-allowed', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           &#10148;
         </button>
       </div>
