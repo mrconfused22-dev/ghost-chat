@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import { useNotifications } from '../hooks/useNotifications'
 
 const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 
@@ -12,12 +13,19 @@ function Friends({ user }) {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
+  const prevRequestCount = useRef(0)
+  const { notify } = useNotifications()
+
   const token = localStorage.getItem('token')
   const headers = { Authorization: `Bearer ${token}` }
 
   useEffect(() => {
     loadFriends()
     loadRequests()
+
+    // Poll for new friend requests every 30 seconds
+    const interval = setInterval(loadRequests, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const loadFriends = async () => {
@@ -32,7 +40,21 @@ function Friends({ user }) {
   const loadRequests = async () => {
     try {
       const res = await axios.get(`${API}/friends/requests`, { headers })
-      setRequests(res.data)
+      const newRequests = res.data
+
+      // Fire notification if new requests came in since last poll
+      if (prevRequestCount.current > 0 && newRequests.length > prevRequestCount.current) {
+        const diff = newRequests.length - prevRequestCount.current
+        notify(
+          'friendRequests',
+          'New Friend Request 👤',
+          diff === 1
+            ? `${newRequests[0].display_name || 'Someone'} sent you a friend request`
+            : `You have ${diff} new friend requests`
+        )
+      }
+      prevRequestCount.current = newRequests.length
+      setRequests(newRequests)
     } catch (err) {
       console.error(err)
     }
@@ -93,27 +115,37 @@ function Friends({ user }) {
     color: tab === t ? '#fff' : '#666',
     cursor: 'pointer',
     fontSize: '0.9rem',
-    fontWeight: tab === t ? 'bold' : 'normal'
+    fontWeight: tab === t ? 'bold' : 'normal',
+    position: 'relative',
   })
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0a' }}>
       {/* Header */}
-      <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #222', background: '#111' }}>
+      <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #222', background: '#111', flexShrink: 0 }}>
         <h2 style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>Friends</h2>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', borderBottom: '1px solid #222', background: '#111' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #222', background: '#111', flexShrink: 0 }}>
         <button style={tabStyle('friends')} onClick={() => setTab('friends')}>
           Friends {friends.length > 0 && `(${friends.length})`}
         </button>
         <button style={tabStyle('requests')} onClick={() => setTab('requests')}>
-          Requests {requests.length > 0 && `(${requests.length})`}
+          Requests
+          {requests.length > 0 && (
+            <span style={{
+              marginLeft: '6px',
+              background: '#ff4444',
+              color: '#fff',
+              borderRadius: '10px',
+              padding: '1px 7px',
+              fontSize: '0.72rem',
+              fontWeight: 900,
+            }}>{requests.length}</span>
+          )}
         </button>
-        <button style={tabStyle('add')} onClick={() => setTab('add')}>
-          + Add
-        </button>
+        <button style={tabStyle('add')} onClick={() => setTab('add')}>+ Add</button>
       </div>
 
       {/* Content */}
@@ -131,38 +163,21 @@ function Friends({ user }) {
             )}
             {friends.map((f) => (
               <div key={f.friend_account_code} style={{
-                background: '#1a1a1a',
-                border: '1px solid #222',
-                borderRadius: '10px',
-                padding: '1rem',
-                marginBottom: '0.75rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
+                background: '#1a1a1a', border: '1px solid #222', borderRadius: '10px',
+                padding: '1rem', marginBottom: '0.75rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between'
               }}>
                 <div>
                   <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{f.display_name || 'Ghost'}</div>
                   <div style={{ color: '#555', fontSize: '0.8rem', fontFamily: 'monospace' }}>{f.friend_code}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    onClick={() => block(f.friend_account_code)}
-                    style={{
-                      background: 'transparent', border: '1px solid #333',
-                      color: '#888', padding: '0.4rem 0.75rem',
-                      borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem'
-                    }}
-                  >
+                  <button onClick={() => block(f.friend_account_code)}
+                    style={{ background: 'transparent', border: '1px solid #333', color: '#888', padding: '0.4rem 0.75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}>
                     Block
                   </button>
-                  <button
-                    onClick={() => report(f.friend_account_code)}
-                    style={{
-                      background: 'transparent', border: '1px solid #ff444433',
-                      color: '#ff4444', padding: '0.4rem 0.75rem',
-                      borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem'
-                    }}
-                  >
+                  <button onClick={() => report(f.friend_account_code)}
+                    style={{ background: 'transparent', border: '1px solid #ff444433', color: '#ff4444', padding: '0.4rem 0.75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}>
                     Report
                   </button>
                 </div>
@@ -182,35 +197,20 @@ function Friends({ user }) {
             )}
             {requests.map((r) => (
               <div key={r.id} style={{
-                background: '#1a1a1a',
-                border: '1px solid #222',
-                borderRadius: '10px',
-                padding: '1rem',
-                marginBottom: '0.75rem'
+                background: '#1a1a1a', border: '1px solid #222', borderRadius: '10px',
+                padding: '1rem', marginBottom: '0.75rem'
               }}>
                 <div style={{ marginBottom: '0.75rem' }}>
                   <div style={{ fontWeight: 'bold' }}>{r.display_name || 'Ghost'}</div>
                   <div style={{ color: '#555', fontSize: '0.8rem', fontFamily: 'monospace' }}>{r.friend_code}</div>
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button
-                    onClick={() => respond(r.id, 'accept')}
-                    style={{
-                      flex: 1, background: '#ffffff', color: '#000',
-                      border: 'none', padding: '0.6rem',
-                      borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem'
-                    }}
-                  >
+                  <button onClick={() => respond(r.id, 'accept')}
+                    style={{ flex: 1, background: '#ffffff', color: '#000', border: 'none', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem' }}>
                     Accept
                   </button>
-                  <button
-                    onClick={() => respond(r.id, 'reject')}
-                    style={{
-                      flex: 1, background: 'transparent', color: '#888',
-                      border: '1px solid #333', padding: '0.6rem',
-                      borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem'
-                    }}
-                  >
+                  <button onClick={() => respond(r.id, 'reject')}
+                    style={{ flex: 1, background: 'transparent', color: '#888', border: '1px solid #333', padding: '0.6rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>
                     Reject
                   </button>
                 </div>
@@ -225,72 +225,31 @@ function Friends({ user }) {
             <p style={{ color: '#888', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
               Enter your friend's GC- code to send them a friend request.
             </p>
-
             {message && (
-              <div style={{
-                background: '#002a00', border: '1px solid #00ff88',
-                borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem',
-                color: '#00ff88', fontSize: '0.9rem'
-              }}>
+              <div style={{ background: '#002a00', border: '1px solid #00ff88', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', color: '#00ff88', fontSize: '0.9rem' }}>
                 {message}
               </div>
             )}
-
             {error && (
-              <div style={{
-                background: '#2a0000', border: '1px solid #ff4444',
-                borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem',
-                color: '#ff4444', fontSize: '0.9rem'
-              }}>
+              <div style={{ background: '#2a0000', border: '1px solid #ff4444', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', color: '#ff4444', fontSize: '0.9rem' }}>
                 {error}
               </div>
             )}
-
             <div style={{ marginBottom: '1rem' }}>
               <p style={{ color: '#555', fontSize: '0.8rem', marginBottom: '0.5rem' }}>Your friend code (share this):</p>
-              <div style={{
-                background: '#1a1a1a', border: '1px solid #333',
-                borderRadius: '8px', padding: '0.75rem',
-                fontFamily: 'monospace', color: '#00ff88', fontSize: '1rem',
-                letterSpacing: '0.1em'
-              }}>
+              <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: '8px', padding: '0.75rem', fontFamily: 'monospace', color: '#00ff88', fontSize: '1rem', letterSpacing: '0.1em' }}>
                 {user?.friendCode}
               </div>
             </div>
-
             <input
               type="text"
               placeholder="Enter friend code (GC-XXXXXXXX)"
               value={friendCode}
               onChange={(e) => setFriendCode(e.target.value.toUpperCase())}
-              style={{
-                width: '100%',
-                padding: '0.9rem',
-                marginBottom: '1rem',
-                background: '#1a1a1a',
-                border: '1px solid #444',
-                borderRadius: '8px',
-                color: '#fff',
-                fontSize: '1rem',
-                fontFamily: 'monospace',
-                letterSpacing: '0.05em'
-              }}
+              style={{ width: '100%', padding: '0.9rem', marginBottom: '1rem', background: '#1a1a1a', border: '1px solid #444', borderRadius: '8px', color: '#fff', fontSize: '1rem', fontFamily: 'monospace', letterSpacing: '0.05em' }}
             />
-            <button
-              onClick={sendRequest}
-              disabled={loading || !friendCode.trim()}
-              style={{
-                width: '100%',
-                background: friendCode.trim() ? '#ffffff' : '#222',
-                color: friendCode.trim() ? '#000' : '#555',
-                border: 'none',
-                padding: '1rem',
-                fontSize: '1rem',
-                borderRadius: '8px',
-                cursor: friendCode.trim() ? 'pointer' : 'not-allowed',
-                fontWeight: 'bold'
-              }}
-            >
+            <button onClick={sendRequest} disabled={loading || !friendCode.trim()}
+              style={{ width: '100%', background: friendCode.trim() ? '#ffffff' : '#222', color: friendCode.trim() ? '#000' : '#555', border: 'none', padding: '1rem', fontSize: '1rem', borderRadius: '8px', cursor: friendCode.trim() ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}>
               {loading ? 'SENDING...' : 'SEND FRIEND REQUEST'}
             </button>
           </div>
