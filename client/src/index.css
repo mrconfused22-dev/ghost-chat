@@ -9,15 +9,17 @@ body {
   color: #ffffff;
   font-family: 'Segoe UI', sans-serif;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  min-height: 100dvh; /* fixes mobile browser bar gap */
+  width: 100%;
+  overflow-x: hidden;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
