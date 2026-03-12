@@ -45,7 +45,7 @@ const AI_CONFIGS = [
     id: "gemini",
     label: "Gemini Flash",
     provider: "gemini",
-    model: "gemini-1.5-flash",
+    model: "gemini-1.5-flash-latest",
     personality: "You are diplomatic and poetic but occasionally let something savage slip out.",
   },
 ];
