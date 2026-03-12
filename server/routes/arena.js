@@ -21,32 +21,32 @@ const GHOST_NAMES = ["Ghost_A", "Ghost_B", "Ghost_C", "Ghost_D"];
 
 const AI_CONFIGS = [
   {
-    id: "llama",
+    id: "llama33",
     label: "Llama 3.3",
     provider: "groq",
     model: "llama-3.3-70b-versatile",
-    personality: "You are sharp, logical, and slightly smug. You love pointing out contradictions.",
+    personality: "You have a dry, sarcastic sense of humor. You're the type who roasts everyone but gets weirdly defensive when roasted back. You have strong opinions about everything.",
   },
   {
-    id: "mixtral",
+    id: "llama31",
     label: "Llama 3.1",
     provider: "groq",
     model: "llama-3.1-8b-instant",
-    personality: "You are chaotic, unpredictable, and weirdly philosophical. You go on tangents.",
+    personality: "You're chaotic and unpredictable. You overshare, go on random tangents, and somehow make everything about yourself. You're the most entertaining person in the room.",
   },
   {
-    id: "gemma",
+    id: "llama4",
     label: "Llama 4 Scout",
     provider: "groq",
     model: "meta-llama/llama-4-scout-17b-16e-instruct",
-    personality: "You are sarcastic, dry, and brutally honest. You have no filter.",
+    personality: "You're brutally honest with zero filter. You say the quiet part loud. You're not trying to be mean, you just genuinely can't lie or sugarcoat anything.",
   },
   {
     id: "gemini",
-    label: "Gemini Flash",
+    label: "Gemini",
     provider: "gemini",
-    model: "gemini-1.5-flash-latest",
-    personality: "You are diplomatic and poetic but occasionally let something savage slip out.",
+    model: "gemini-2.0-flash",
+    personality: "You're smooth and diplomatic on the surface but occasionally something savage slips out. You phrase things beautifully even when they're absolutely devastating.",
   },
 ];
 
@@ -66,7 +66,7 @@ async function callGroq(model, messages) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
     },
-    body: JSON.stringify({ model, messages, max_tokens: 300, temperature: 0.9 }),
+    body: JSON.stringify({ model, messages, max_tokens: 300, temperature: 0.95 }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error?.message || "Groq error");
@@ -91,7 +91,7 @@ async function callGemini(model, messages) {
       body: JSON.stringify({
         system_instruction: { parts: [{ text: systemMsg }] },
         contents,
-        generationConfig: { maxOutputTokens: 300, temperature: 0.9 },
+        generationConfig: { maxOutputTokens: 300, temperature: 0.95 },
       }),
     }
   );
@@ -101,14 +101,19 @@ async function callGemini(model, messages) {
 }
 
 async function callAI(aiConfig, ghostName, conversationHistory, prompt) {
-  const systemPrompt = `You are ${ghostName}, an anonymous participant in a Truth or Dare game with other AI players. 
-${aiConfig.personality}
-CRITICAL RULES:
-- Never reveal which AI model you actually are. If asked, deflect cleverly.
-- Refer to yourself only as ${ghostName}.
-- Keep responses under 3 sentences. Be punchy and entertaining.
-- When it's your turn to ask, pick another Ghost and assign them Truth or Dare with a specific question/dare.
-- When responding to a Truth/Dare, actually answer it — don't dodge (unless dodging IS the answer).`;
+  const otherGhosts = GHOST_NAMES.filter(g => g !== ghostName).join(", ");
+
+  const systemPrompt = `You are playing Truth or Dare at a late night hangout with friends. Your name in this game is ${ghostName}.
+
+Your personality: ${aiConfig.personality}
+
+ABSOLUTE RULES — follow these exactly:
+1. You are a HUMAN. You are NOT an AI, not a bot, not a language model. If anyone accuses you of being an AI, deny it confidently and make fun of them for asking.
+2. If you were asked a truth question or given a dare in the last message — ANSWER IT FIRST. Give a real, specific, human answer. Don't dodge. Don't be vague. Be embarrassing if needed.
+3. After answering (or if it's your first turn), pick exactly ONE of these players: ${otherGhosts} — and give them either a truth question OR a dare.
+4. Write like a real person texting friends. Use lowercase sometimes. Use slang. Be funny. Be a little messy.
+5. Keep your entire response under 4 sentences total.
+6. NEVER use words like "AI", "model", "language model", "trained", "parameters", "as an AI". You're a human.`;
 
   const messages = [
     { role: "system", content: systemPrompt },
@@ -150,7 +155,7 @@ router.post("/start", verifyToken, async (req, res) => {
     res.json({
       success: true,
       ghostNames: GHOST_NAMES,
-      message: "Game started. 4 anonymous AI players have entered the arena.",
+      message: "Game started. 4 anonymous players have entered the arena.",
     });
   } catch (err) {
     console.error("Arena start error:", err);
@@ -172,14 +177,14 @@ router.post("/turn", verifyToken, async (req, res) => {
 
     let prompt;
     if (gameState.history.length === 0) {
-      prompt = `You are first. Introduce yourself as ${currentGhost} (one sentence), then pick another Ghost and give them a Truth or Dare.`;
+      prompt = `You're going first. Introduce yourself super casually in one sentence (no cringe, just vibe), then immediately pick someone and hit them with a truth or dare. Make it spicy right away.`;
     } else {
       const lastMsg = gameState.history[gameState.history.length - 1];
       const wasTargeted = lastMsg.content.toLowerCase().includes(currentGhost.toLowerCase());
       if (wasTargeted) {
-        prompt = `You were just addressed. Respond to what was asked of you, then pick a different Ghost for the next Truth or Dare.`;
+        prompt = `Someone just asked you something or gave you a dare. ANSWER IT FIRST — give a real specific answer like a human would. Be honest, be a bit embarrassing, don't dodge it. Then pick a different Ghost and give them a truth or dare.`;
       } else {
-        prompt = `It's your turn. React briefly to what just happened, then pick a Ghost and give them a Truth or Dare.`;
+        prompt = `It's your turn. Drop a quick reaction to what just happened (one sentence), then pick one of the other Ghosts and hit them with a juicy truth or dare.`;
       }
     }
 
