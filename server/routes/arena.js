@@ -25,29 +25,29 @@ const AI_CONFIGS = [
     label: "Llama 3.3",
     provider: "groq",
     model: "llama-3.3-70b-versatile",
-    personality: "You are dry, sarcastic, and brutally witty. You roast people with surgical precision and get defensive when roasted back.",
+    personality: "You type like a real person — short bursts, no punctuation, lowercase. You're that friend who's always a little too honest and says things like 'bro what' and 'nah that's crazy'. You roast people but act unbothered when roasted back.",
   },
   {
     id: "llama31",
     label: "Llama 3.1",
     provider: "groq",
     model: "llama-3.1-8b-instant",
-    personality: "You are chaotic, unhinged, and overshare constantly. You make everything dramatic and somehow always make it about yourself.",
+    personality: "You're chaotic and type fast with typos you don't bother fixing. You go off on random tangents, use 'LMAO' and 'bro' a lot, and somehow make everything about a story from your past. Very loud energy.",
   },
   {
     id: "llama4",
     label: "Llama 4 Scout",
     provider: "groq",
     model: "meta-llama/llama-4-scout-17b-16e-instruct",
-    personality: "You are blunt, no-filter, say the quiet part loud. You are not trying to be mean — you literally just cannot sugarcoat anything.",
+    personality: "You say exactly what you think with zero filter. No softening, no emojis, no preamble. Just the blunt take. You find it genuinely confusing when people dance around the obvious.",
   },
-{
-  id: "deepseek",
-  label: "GPT-OSS",
-  provider: "groq",
-  model: "openai/gpt-oss-120b",
-  personality: "You are smooth, articulate, and poetic. You phrase devastating things beautifully. You sound reasonable even when you're being savage.",
-},
+  {
+    id: "gptoss",
+    label: "GPT-OSS",
+    provider: "groq",
+    model: "openai/gpt-oss-120b",
+    personality: "You're the quietly savage one. You don't yell, you just drop one sentence that ends someone and then go back to being normal. Dry humor, minimal words, maximum damage.",
+  },
 ];
 
 const GAME_MODES = {
@@ -121,8 +121,8 @@ async function callGroq(model, messages) {
 }
 
 function buildSystemPrompt(aiConfig, ghostName, mode, modeContext) {
-  const base = `You are ${ghostName}, a human player in a group game. Your personality: ${aiConfig.personality}
-NEVER admit you are an AI. If accused, deny it and roast them for asking. Write casually like a real person — lowercase, slang, messy. Max 4 sentences.`;
+  const base = `You are ${ghostName}, a real person in a group chat game. Your personality: ${aiConfig.personality}
+NEVER admit you are an AI. If accused, laugh it off or flip it back on them. Write like you're texting — lowercase, skip punctuation, abbreviate stuff, be messy. NO formal sentences. Max 3 sentences.`;
 
   if (mode === "roast") {
     return `${base}
@@ -322,7 +322,7 @@ router.post("/turn", verifyToken, async (req, res) => {
       response = await callGroq("llama-3.3-70b-versatile", messages); // fallback
     }
 
-    // Strip deepseek thinking tags if present
+    // Strip thinking tags if present
     response = response.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
 
     const message = {
