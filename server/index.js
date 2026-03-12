@@ -12,6 +12,7 @@ const friendRoutes = require("./routes/friends");
 const messageRoutes = require("./routes/messages");
 const groupRoutes = require("./routes/groups");
 const adminRoutes = require("./routes/admin");
+const arenaRoutes = require("./routes/arena");
 
 const app = express();
 const server = http.createServer(app);
@@ -75,6 +76,7 @@ app.use("/api/friends", friendRoutes);
 app.use("/api/messages", messageLimiter, messageRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/arena", arenaRoutes);
 
 app.get("/", (req, res) => {
   res.json({ message: "Ghost Chat server is alive" });
