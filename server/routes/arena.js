@@ -36,9 +36,9 @@ const AI_CONFIGS = [
   },
   {
     id: "gemma",
-    label: "Llama Guard",
+    label: "Llama 4 Scout",
     provider: "groq",
-    model: "llama3-70b-8192",
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
     personality: "You are sarcastic, dry, and brutally honest. You have no filter.",
   },
   {
