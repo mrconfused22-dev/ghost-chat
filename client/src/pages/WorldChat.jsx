@@ -33,7 +33,6 @@ function WorldChat({ user }) {
 
       // Notify if message is from someone else
       if (msg.account_code !== user.accountCode) {
-        notify('worldChat', 'World Chat 🪐', `${msg.display_name}: ${msg.message}`)
       }
     })
 
