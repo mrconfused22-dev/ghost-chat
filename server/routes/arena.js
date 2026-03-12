@@ -15,7 +15,6 @@ function verifyToken(req, res, next) {
   }
 }
 
-// In-memory game state (resets on server restart - fine for this feature)
 let gameState = null;
 
 const GHOST_NAMES = ["Ghost_A", "Ghost_B", "Ghost_C", "Ghost_D"];
@@ -23,28 +22,28 @@ const GHOST_NAMES = ["Ghost_A", "Ghost_B", "Ghost_C", "Ghost_D"];
 const AI_CONFIGS = [
   {
     id: "llama",
-    label: "Llama 3",
+    label: "Llama 3.3",
     provider: "groq",
-    model: "llama3-70b-8192",
+    model: "llama-3.3-70b-versatile",
     personality: "You are sharp, logical, and slightly smug. You love pointing out contradictions.",
   },
   {
     id: "mixtral",
-    label: "Mixtral",
+    label: "Llama 3.1",
     provider: "groq",
-    model: "mixtral-8x7b-32768",
+    model: "llama-3.1-8b-instant",
     personality: "You are chaotic, unpredictable, and weirdly philosophical. You go on tangents.",
   },
   {
     id: "gemma",
-    label: "Gemma",
+    label: "Llama Guard",
     provider: "groq",
-    model: "gemma2-9b-it",
+    model: "llama3-70b-8192",
     personality: "You are sarcastic, dry, and brutally honest. You have no filter.",
   },
   {
     id: "gemini",
-    label: "Gemini",
+    label: "Gemini Flash",
     provider: "gemini",
     model: "gemini-1.5-flash",
     personality: "You are diplomatic and poetic but occasionally let something savage slip out.",
@@ -60,7 +59,6 @@ function shuffle(arr) {
   return a;
 }
 
-// Call Groq API
 async function callGroq(model, messages) {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
@@ -75,9 +73,7 @@ async function callGroq(model, messages) {
   return data.choices[0].message.content.trim();
 }
 
-// Call Gemini API
 async function callGemini(model, messages) {
-  // Convert OpenAI format to Gemini format
   const contents = messages
     .filter((m) => m.role !== "system")
     .map((m) => ({
@@ -130,20 +126,17 @@ CRITICAL RULES:
   }
 }
 
-// POST /api/arena/start - start a new game
 router.post("/start", verifyToken, async (req, res) => {
   try {
     const shuffledAIs = shuffle(AI_CONFIGS);
     const assignments = {};
-    const reverseMap = {};
 
     GHOST_NAMES.forEach((ghost, i) => {
       assignments[ghost] = shuffledAIs[i];
-      reverseMap[shuffledAIs[i].id] = ghost;
     });
 
     gameState = {
-      assignments,       // ghost -> AI config (SECRET until reveal)
+      assignments,
       history: [],
       round: 0,
       maxRounds: 8,
@@ -165,7 +158,6 @@ router.post("/start", verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/arena/turn - trigger next AI turn
 router.post("/turn", verifyToken, async (req, res) => {
   try {
     if (!gameState || !gameState.started) {
@@ -178,7 +170,6 @@ router.post("/turn", verifyToken, async (req, res) => {
     const currentGhost = gameState.currentGhost;
     const aiConfig = gameState.assignments[currentGhost];
 
-    // Build prompt based on round
     let prompt;
     if (gameState.history.length === 0) {
       prompt = `You are first. Introduce yourself as ${currentGhost} (one sentence), then pick another Ghost and give them a Truth or Dare.`;
@@ -205,7 +196,6 @@ router.post("/turn", verifyToken, async (req, res) => {
     gameState.history.push(message);
     gameState.votes[message.id] = 0;
 
-    // Advance to next ghost
     const currentIdx = GHOST_NAMES.indexOf(currentGhost);
     gameState.currentGhost = GHOST_NAMES[(currentIdx + 1) % GHOST_NAMES.length];
     gameState.round++;
@@ -227,7 +217,6 @@ router.post("/turn", verifyToken, async (req, res) => {
   }
 });
 
-// POST /api/arena/vote - vote on a message
 router.post("/vote", verifyToken, async (req, res) => {
   try {
     const { messageId } = req.body;
@@ -244,7 +233,6 @@ router.post("/vote", verifyToken, async (req, res) => {
   }
 });
 
-// GET /api/arena/state - get current game state (no reveal)
 router.get("/state", verifyToken, async (req, res) => {
   if (!gameState) return res.json({ started: false });
   res.json({
@@ -259,7 +247,6 @@ router.get("/state", verifyToken, async (req, res) => {
   });
 });
 
-// GET /api/arena/reveal - reveal who was who (only after game ends)
 router.get("/reveal", verifyToken, async (req, res) => {
   if (!gameState) return res.status(400).json({ error: "No game" });
   if (!gameState.finished) {
@@ -272,7 +259,6 @@ router.get("/reveal", verifyToken, async (req, res) => {
   res.json({ reveal });
 });
 
-// POST /api/arena/reset - reset game
 router.post("/reset", verifyToken, async (req, res) => {
   gameState = null;
   res.json({ success: true });
