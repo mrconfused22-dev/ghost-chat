@@ -39,20 +39,6 @@ function Friends({ user }) {
     try {
       const res = await axios.get(`${API}/friends/requests`, { headers })
       const newRequests = res.data
-
-      // Fire notification if new requests came in since last poll
-      if (prevRequestCount.current > 0 && newRequests.length > prevRequestCount.current) {
-        const diff = newRequests.length - prevRequestCount.current
-        notify(
-          'friendRequests',
-          'New Friend Request 👤',
-          diff === 1
-            ? `${newRequests[0].display_name || 'Someone'} sent you a friend request`
-            : `You have ${diff} new friend requests`
-        )
-      }
-      prevRequestCount.current = newRequests.length
-      setRequests(newRequests)
     } catch (err) {
       console.error(err)
     }
