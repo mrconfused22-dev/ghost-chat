@@ -3,6 +3,8 @@ import axios from 'axios'
 
 const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 
+const GHOST_NAMES = ['Ghost_A', 'Ghost_B', 'Ghost_C', 'Ghost_D']
+
 const GHOST_COLORS = {
   Ghost_A: { color: '#a78bfa', dim: '#2e1a5e' },
   Ghost_B: { color: '#34d399', dim: '#052e1c' },
@@ -61,7 +63,7 @@ function RevealCard({ reveal, mode }) {
   return (
     <div style={{ background: '#080808', border: '1px solid #222', borderRadius: '12px', padding: '1.5rem', marginTop: '1rem' }}>
       <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', letterSpacing: '0.1em', marginBottom: '1rem', textAlign: 'center' }}>🎭 THE REVEAL</div>
-      {['Ghost_A', 'Ghost_B', 'Ghost_C', 'Ghost_D'].map(ghost => {
+      {GHOST_NAMES.map(ghost => {
         const c = GHOST_COLORS[ghost]
         const info = reveal[ghost]
         if (!info) return null
