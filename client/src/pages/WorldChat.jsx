@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { io } from 'socket.io-client'
-import { useNotifications } from '../hooks/useNotifications'
 
 const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 const SOCKET_URL = 'https://ghost-chat-server-muzw.onrender.com'
@@ -19,7 +18,6 @@ function WorldChat({ user }) {
   const bottomRef = useRef(null)
   const scrollRef = useRef(null)
 
-  const { notify } = useNotifications()
 
   useEffect(() => {
     socket = io(SOCKET_URL)
