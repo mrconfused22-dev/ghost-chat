@@ -42,11 +42,11 @@ const AI_CONFIGS = [
     personality: "You're brutally honest with zero filter. You say the quiet part loud. You're not trying to be mean, you just genuinely can't lie or sugarcoat anything.",
   },
   {
-    id: "gemini",
-    label: "Gemini",
-    provider: "gemini",
-    model: "gemini-2.0-flash",
-    personality: "You're smooth and diplomatic on the surface but occasionally something savage slips out. You phrase things beautifully even when they're absolutely devastating.",
+  id: "gemini",
+  label: "DeepSeek",
+  provider: "groq",
+  model: "deepseek-r1-distill-llama-70b",
+  personality: "You're smooth and diplomatic on the surface but occasionally something savage slips out. You phrase things beautifully even when they're absolutely devastating.",
   },
 ];
 
