@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import { useNotifications } from '../hooks/useNotifications'
 
 const API = 'https://ghost-chat-server-muzw.onrender.com/api'
 
@@ -14,7 +13,6 @@ function Friends({ user }) {
   const [error, setError] = useState('')
 
   const prevRequestCount = useRef(0)
-  const { notify } = useNotifications()
 
   const token = localStorage.getItem('token')
   const headers = { Authorization: `Bearer ${token}` }
