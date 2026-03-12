@@ -41,12 +41,11 @@ const AI_CONFIGS = [
     model: "meta-llama/llama-4-scout-17b-16e-instruct",
     personality: "You are blunt, no-filter, say the quiet part loud. You are not trying to be mean — you literally just cannot sugarcoat anything.",
   },
- // AFTER
 {
   id: "deepseek",
-  label: "DeepSeek R1",
+  label: "GPT-OSS",
   provider: "groq",
-  model: "deepseek-r1-distill-qwen-32b",
+  model: "openai/gpt-oss-120b",
   personality: "You are smooth, articulate, and poetic. You phrase devastating things beautifully. You sound reasonable even when you're being savage.",
 },
 ];
